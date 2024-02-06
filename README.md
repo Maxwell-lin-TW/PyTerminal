@@ -1,3 +1,5 @@
+2024/02/06-2
+  Facing problem at windows OS, the function of searching com port should be seperated by OS.   
 2024/02/06
   Initial version, for learning Python purpose, still a beginner.
   
