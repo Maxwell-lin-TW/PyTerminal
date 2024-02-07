@@ -4,6 +4,7 @@ import os
 import serial as sp
 import threading
 import datetime
+import sys
 
 
 class PyTerminal:
@@ -19,7 +20,6 @@ class PyTerminal:
         self.timer_stop_evnet = threading.Event()
         self.timer_interval = 0.5  # seconds
         self.create_widget()
-        print("This is constructor")
 
     def create_widget(self):
         self.frame_container1 = tk.Frame(self.tkinter_object)
@@ -92,7 +92,12 @@ class PyTerminal:
         print("Creat Widget")
 
     def scan_serialports(self):
-        read = os.popen("python3 -m serial.tools.list_ports").read()
+        if sys.platform.startswith('linux'):
+            read = os.popen("python3 -m serial.tools.list_ports").read()
+            print('linux platform')
+        else:
+            read = os.popen("python -m serial.tools.list_ports").read()            
+            print('windows platform')
         self.serialport_list = read.split()
         self.serialport_count = 0
         for str in self.serialport_list:
