@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from tkinter import ttk
 import os
@@ -14,11 +15,12 @@ class PyTerminal:
             raise ValueError("Value must be a tkinter object!")
         self.tkinter_object = tkinter_object
         self.tkinter_object.title("SerialPort GUI Application")
+        self.tkinter_object.resizable(False, False)
         # self.tkinter_object.geometry('800x400')
 
         # Create a serialport obj here
         self.serialport = sp.Serial()
-        self.timer_stop_evnet = threading.Event()
+        self.timer_stop_event = threading.Event()
         self.timer_interval = 0.01  # seconds
         self.create_widget()
 
@@ -41,6 +43,12 @@ class PyTerminal:
             ],
         )
         self.combobox2_baudrates.current(4)
+
+        self.combobox3_CRLR = ttk.Combobox(
+            self.frame_container2,
+            values=["NONE", "+ LF", "+ CR", "+ LFCR", "+ CRLF", "+LF * +CR"],
+        )
+        self.combobox3_CRLR.current(0)
 
         self.btn_serialport_connect = tk.Button(
             self.frame_container1,
@@ -72,8 +80,29 @@ class PyTerminal:
             state="disabled",
             command=self.btn_transmitt_2_pressed_action,
         )
+        self.text_field3 = tk.Entry(self.frame_container2)
+        self.btn_transmitt_3 = tk.Button(
+            self.frame_container2,
+            text="Send",
+            state="disabled",
+            command=self.btn_transmitt_3_pressed_action,
+        )
+        self.text_field4 = tk.Entry(self.frame_container2)
+        self.btn_transmitt_4 = tk.Button(
+            self.frame_container2,
+            text="Send",
+            state="disabled",
+            command=self.btn_transmitt_4_pressed_action,
+        )
+        self.text_field5 = tk.Entry(self.frame_container2)
+        self.btn_transmitt_5 = tk.Button(
+            self.frame_container2,
+            text="Send",
+            state="disabled",
+            command=self.btn_transmitt_5_pressed_action,
+        )
 
-        self.checkbox_mode_value = tk.IntVar()
+        self.checkbox_mode_value = tk.BooleanVar()
         self.checkbox_mode = tk.Checkbutton(
             self.frame_container2,
             text="Time Line Mode",
@@ -81,7 +110,7 @@ class PyTerminal:
             command=self.check_box_mode_pressed_action,
         )
 
-        self.checkbox_scoll2bottom_value = tk.IntVar()
+        self.checkbox_scoll2bottom_value = tk.BooleanVar()
         self.checkbox_scoll2bottom = tk.Checkbutton(
             self.frame_container2,
             text="Scoll Bottom",
@@ -89,9 +118,26 @@ class PyTerminal:
         )
         self.checkbox_scoll2bottom.select()  # set default mode on ->self.checkbox_scoll2bottom_value=1
 
+        self.checkbox_hex_mode_value = tk.BooleanVar()
+        self.checkbox_hex_mode = tk.Checkbutton(
+            self.frame_container2,
+            text="Hex Mode",
+            variable=self.checkbox_hex_mode_value,
+        )
+
+        self.checkbox_treat_cr_as_lf_value = tk.BooleanVar()
+        self.checkbox_treat_cr_as_lf = tk.Checkbutton(
+            self.frame_container2,
+            text="Treat CR as LF",
+            variable=self.checkbox_treat_cr_as_lf_value,
+        )
+        self.checkbox_treat_cr_as_lf.select()  # set default CR = LF mode
+
         self.textarea1 = tk.Text(self.tkinter_object, width=77, height=25)
         self.textarea1_scrollbar = tk.Scrollbar(self.tkinter_object)
-        self.textarea1.config(yscrollcommand=self.textarea1_scrollbar.set)
+        self.textarea1.config(
+            yscrollcommand=self.textarea1_scrollbar.set, state="disabled"
+        )
         # frame 1  grid setup
         self.combobox1_serialports.grid(column=0, row=0)
         self.btn_serialport_connect.grid(column=1, row=0)
@@ -103,9 +149,19 @@ class PyTerminal:
         self.btn_transmitt_1.grid(column=1, row=0)
         self.text_field2.grid(column=0, row=1)
         self.btn_transmitt_2.grid(column=1, row=1)
-        self.checkbox_mode.grid(column=0, row=2)
-        self.checkbox_scoll2bottom.grid(column=0, row=3)
+        self.text_field3.grid(column=0, row=2)
+        self.btn_transmitt_3.grid(column=1, row=2)
+        self.text_field4.grid(column=0, row=3)
+        self.btn_transmitt_4.grid(column=1, row=3)
+        self.text_field5.grid(column=0, row=4)
+        self.btn_transmitt_5.grid(column=1, row=4)
+        self.checkbox_mode.grid(column=0, row=5, sticky=tk.W)
+        self.checkbox_scoll2bottom.grid(column=0, row=6, sticky=tk.W)
+        self.combobox3_CRLR.grid(column=0, row=7, sticky=tk.W)
+        self.checkbox_hex_mode.grid(column=0, row=8, sticky=tk.W)
+        self.checkbox_treat_cr_as_lf.grid(column=0, row=9, sticky=tk.W)
 
+        # top layer grid setup
         self.frame_container1.grid(column=0, row=0)
         self.frame_container2.grid(column=2, row=1)
         self.textarea1.grid(column=0, row=1)
@@ -167,12 +223,31 @@ class PyTerminal:
         if self.serialport.is_open:
             self.serialport.close()
 
+    def make_string(self, combobox_text, target_string):
+        if combobox_text == "+ LF":
+            return target_string + "\n"
+        elif combobox_text == "+ CR":
+            return target_string + "\r"
+        elif combobox_text == "+ LFCR":
+            return target_string + "\n\r"
+        elif combobox_text == "+ CRLF":
+            return target_string + "\r\n"
+        elif combobox_text == "+LF * +CR":
+            return "\n" + target_string + "\r"
+        else:
+            return None
+
     def serialport_sendbytes(self, data):
         if not isinstance(data, str):
             print("input not acceptable")
         else:
             if self.serialport.is_open and (data != ""):
-                self.serialport.write(data.encode())
+                if not self.combobox3_CRLR.get() == "NONE":
+                    self.serialport.write(
+                        self.make_string(self.combobox3_CRLR.get(), data).encode()
+                    )
+                else:
+                    self.serialport.write(data.encode())
 
     def btn_serialport_connect_pressed_action(self):
         if self.btn_serialport_connect.cget("text") == "Connect":
@@ -199,6 +274,9 @@ class PyTerminal:
                 self.btn_scan_serialports.config(state="disabled")
                 self.btn_transmitt_1.config(state="active")
                 self.btn_transmitt_2.config(state="active")
+                self.btn_transmitt_3.config(state="active")
+                self.btn_transmitt_4.config(state="active")
+                self.btn_transmitt_5.config(state="active")
                 print(f"Port {self.serialport.name} open successfully")
             else:
                 print(f"Port {self.serialport.name} Open Failed")
@@ -211,6 +289,9 @@ class PyTerminal:
             self.btn_scan_serialports.config(state="active")
             self.btn_transmitt_1.config(state="disabled")
             self.btn_transmitt_2.config(state="disabled")
+            self.btn_transmitt_3.config(state="disabled")
+            self.btn_transmitt_4.config(state="disabled")
+            self.btn_transmitt_5.config(state="disabled")
             print(f"Port {self.serialport.name} closed successfully")
 
     def btn_transmitt_1_pressed_action(self):
@@ -219,29 +300,82 @@ class PyTerminal:
     def btn_transmitt_2_pressed_action(self):
         self.serialport_sendbytes(self.text_field2.get())
 
+    def btn_transmitt_3_pressed_action(self):
+        self.serialport_sendbytes(self.text_field3.get())
+
+    def btn_transmitt_4_pressed_action(self):
+        self.serialport_sendbytes(self.text_field4.get())
+
+    def btn_transmitt_5_pressed_action(self):
+        self.serialport_sendbytes(self.text_field5.get())
+
     def check_box_mode_pressed_action(self):
         self.textarea1.insert(tk.END, "\n")
 
     def timer_callback(self):
-        if self.serialport.is_open and self.serialport.in_waiting > 0:
-            data = self.serialport.read_all().decode("utf-8")
-            if self.checkbox_mode_value.get() == 1:
-                self.textarea1.insert(tk.END, f"{datetime.datetime.now()} > {data}\n")
-            else:
-                self.textarea1.insert(tk.END, f"{data}")
-        if self.checkbox_scoll2bottom_value.get() == 1:
+        try:
+            if self.serialport.is_open and self.serialport.in_waiting > 0:
+                read_data = self.serialport.read_all()  # read_all return a bytes
+
+                if self.checkbox_hex_mode_value.get() == True:  # Hex mode print out
+                    if self.checkbox_mode_value.get() == True:
+                        self.textarea1.insert(tk.END, f"{datetime.datetime.now()} > ")
+                    self.textarea1.insert(
+                        tk.END, self.convert2hexstring(read_data) + "\n"
+                    )
+
+                else:  # character mode print out
+                    if self.checkbox_mode_value.get() == True:
+                        self.textarea1.insert(
+                            tk.END,
+                            f"{datetime.datetime.now()} > {self.convert2string(read_data)}\n",
+                        )
+                    else:
+                        self.textarea1.insert(tk.END, self.convert2string(read_data))
+        except OSError as e:
+            print(f"In timer callback catch error {e}")
+        if self.checkbox_scoll2bottom_value.get() == True:
             self.textarea1.see(tk.END)
 
     def timer_start(self):
         threading.Thread(target=self.timer_thread).start()
 
     def timer_stop(self):
-        self.timer_stop_evnet.set()
+        self.timer_stop_event.set()
 
     def timer_thread(self):
-        while not self.timer_stop_evnet.is_set():
+        while not self.timer_stop_event.is_set():
             self.timer_callback()
-            self.timer_stop_evnet.wait(self.timer_interval)
+            self.timer_stop_event.wait(self.timer_interval)
+
+    def convert2hexstring(self, input):
+        if not isinstance(input, bytes):
+            return None
+        byte_arrary = [int(byte) for byte in input]
+        return_string = ""
+        for byte in byte_arrary:
+            return_string += f"0x{byte:02X},"
+        return_string = return_string.rstrip(",")
+        return return_string
+
+    def convert2string(self, input):
+        if not isinstance(input, bytes):
+            return None
+        byte_arrary = [int(byte) for byte in input]
+        return_string = ""
+        for byte in byte_arrary:
+            if byte >= 32 and byte <= 126:
+                return_string += f"{chr(byte)}"
+            elif byte == 10:  # 0x0A
+                return_string += "\n"
+            elif byte == 13:  # 0x0D
+                if self.checkbox_treat_cr_as_lf_value.get() == True:
+                    return_string += "\n"
+                else:
+                    return_string += "\r"
+            else:
+                return_string += f"[0x{byte:02X}]"
+        return return_string
 
 
 def main():
@@ -256,6 +390,7 @@ def main():
             app.serialport_close()
             app.timer_stop()
             root.destroy()
+            time.sleep(1)  # wait a little while for thread to end up by stop event
 
         root.protocol("WM_DELETE_WINDOW", on_closing)
         root.mainloop()
