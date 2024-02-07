@@ -19,7 +19,7 @@ class PyTerminal:
         # Create a serialport obj here
         self.serialport = sp.Serial()
         self.timer_stop_evnet = threading.Event()
-        self.timer_interval = 0.5  # seconds
+        self.timer_interval = 0.01  # seconds
         self.create_widget()
 
     def create_widget(self):
