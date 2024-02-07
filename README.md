@@ -7,6 +7,6 @@
   
   user$:python3 main.py
 
-  ![alt text](https://github.com/Maxwell-lin-TW/Python_Tkinter_Pyserial_TimerThreading/blob/main/Screenshot from 2024-02-07 12-25-44.png)
+  ![alt text](https://github.com/Maxwell-lin-TW/Python_Tkinter_Pyserial_TimerThreading/blob/main/Screenshot%20from%202024-02-07%2012-25-44.png)
 
   
