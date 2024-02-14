@@ -101,13 +101,20 @@ class PyTerminal:
             state="disabled",
             command=self.btn_transmitt_5_pressed_action,
         )
+        self.text_field_for_hex = tk.Entry(self.frame_container2)
+        self.btn_transmitt_hex = tk.Button(
+            self.frame_container2,
+            text="Send",
+            state="disabled",
+            command=self.btn_transmitt_hex_pressed_action,
+        )
 
-        self.checkbox_mode_value = tk.BooleanVar()
-        self.checkbox_mode = tk.Checkbutton(
+        self.checkbox_timeline_mode_value = tk.BooleanVar()
+        self.checkbox_timeline_mode = tk.Checkbutton(
             self.frame_container2,
             text="Time Line Mode",
-            variable=self.checkbox_mode_value,
-            command=self.check_box_mode_pressed_action,
+            variable=self.checkbox_timeline_mode_value,
+            command=self.checkbox_timeline_mode_pressed_action,
         )
 
         self.checkbox_scoll2bottom_value = tk.BooleanVar()
@@ -123,6 +130,7 @@ class PyTerminal:
             self.frame_container2,
             text="Hex Mode",
             variable=self.checkbox_hex_mode_value,
+            command=self.checkbox_hex_mode_selected_action,
         )
 
         self.checkbox_treat_cr_as_lf_value = tk.BooleanVar()
@@ -138,6 +146,8 @@ class PyTerminal:
         self.textarea1.config(
             yscrollcommand=self.textarea1_scrollbar.set, state="disabled"
         )
+
+        self.label1 = tk.Label(self.frame_container2, text="Hex input:")
         # frame 1  grid setup
         self.combobox1_serialports.grid(column=0, row=0)
         self.btn_serialport_connect.grid(column=1, row=0)
@@ -155,11 +165,14 @@ class PyTerminal:
         self.btn_transmitt_4.grid(column=1, row=3)
         self.text_field5.grid(column=0, row=4)
         self.btn_transmitt_5.grid(column=1, row=4)
-        self.checkbox_mode.grid(column=0, row=5, sticky=tk.W)
-        self.checkbox_scoll2bottom.grid(column=0, row=6, sticky=tk.W)
-        self.combobox3_CRLR.grid(column=0, row=7, sticky=tk.W)
-        self.checkbox_hex_mode.grid(column=0, row=8, sticky=tk.W)
-        self.checkbox_treat_cr_as_lf.grid(column=0, row=9, sticky=tk.W)
+        self.label1.grid(column=0, row=5)
+        self.text_field_for_hex.grid(column=0, row=6)
+        self.btn_transmitt_hex.grid(column=1, row=6)
+        self.checkbox_timeline_mode.grid(column=0, row=7, sticky=tk.W)
+        self.checkbox_scoll2bottom.grid(column=0, row=8, sticky=tk.W)
+        self.combobox3_CRLR.grid(column=0, row=9, sticky=tk.W)
+        self.checkbox_hex_mode.grid(column=0, row=10, sticky=tk.W)
+        self.checkbox_treat_cr_as_lf.grid(column=0, row=11, sticky=tk.W)
 
         # top layer grid setup
         self.frame_container1.grid(column=0, row=0)
@@ -205,7 +218,9 @@ class PyTerminal:
             self.remove_combobox_value()
 
     def btn_clear_text_area_pressed_action(self):
+        self.textarea1.config(state="normal")
         self.textarea1.delete(1.0, "end")
+        self.textarea1.config(state="disabled")
 
     def serialport_open(self, port_name, baudrate):  # 8_n_1 as default
         self.serialport.port = port_name
@@ -237,7 +252,7 @@ class PyTerminal:
         else:
             return None
 
-    def serialport_sendbytes(self, data):
+    def serialport_sendbytes_from_String(self, data):
         if not isinstance(data, str):
             print("input not acceptable")
         else:
@@ -272,11 +287,7 @@ class PyTerminal:
                 self.combobox1_serialports.config(state="disabled")
                 self.combobox2_baudrates.config(state="disabled")
                 self.btn_scan_serialports.config(state="disabled")
-                self.btn_transmitt_1.config(state="active")
-                self.btn_transmitt_2.config(state="active")
-                self.btn_transmitt_3.config(state="active")
-                self.btn_transmitt_4.config(state="active")
-                self.btn_transmitt_5.config(state="active")
+                self.hex_mode_object_control()
                 print(f"Port {self.serialport.name} open successfully")
             else:
                 print(f"Port {self.serialport.name} Open Failed")
@@ -287,55 +298,79 @@ class PyTerminal:
             self.combobox1_serialports.config(state="active")
             self.combobox2_baudrates.config(state="active")
             self.btn_scan_serialports.config(state="active")
-            self.btn_transmitt_1.config(state="disabled")
-            self.btn_transmitt_2.config(state="disabled")
-            self.btn_transmitt_3.config(state="disabled")
-            self.btn_transmitt_4.config(state="disabled")
-            self.btn_transmitt_5.config(state="disabled")
+            self.hex_mode_object_control()
             print(f"Port {self.serialport.name} closed successfully")
 
+    def hex_mode_object_control(self):
+        if self.serialport.is_open:
+            if self.checkbox_hex_mode_value.get() == True:
+                self.btn_transmitt_hex.config(state="active")
+                self.btn_transmitt_1.config(state="disabled")
+                self.btn_transmitt_2.config(state="disabled")
+                self.btn_transmitt_3.config(state="disabled")
+                self.btn_transmitt_4.config(state="disabled")
+                self.btn_transmitt_5.config(state="disabled")
+            else:
+                self.btn_transmitt_hex.config(state="disabled")
+                self.btn_transmitt_1.config(state="active")
+                self.btn_transmitt_2.config(state="active")
+                self.btn_transmitt_3.config(state="active")
+                self.btn_transmitt_4.config(state="active")
+                self.btn_transmitt_5.config(state="active")
+
     def btn_transmitt_1_pressed_action(self):
-        self.serialport_sendbytes(self.text_field1.get())
+        self.serialport_sendbytes_from_String(self.text_field1.get())
 
     def btn_transmitt_2_pressed_action(self):
-        self.serialport_sendbytes(self.text_field2.get())
+        self.serialport_sendbytes_from_String(self.text_field2.get())
 
     def btn_transmitt_3_pressed_action(self):
-        self.serialport_sendbytes(self.text_field3.get())
+        self.serialport_sendbytes_from_String(self.text_field3.get())
 
     def btn_transmitt_4_pressed_action(self):
-        self.serialport_sendbytes(self.text_field4.get())
+        self.serialport_sendbytes_from_String(self.text_field4.get())
 
     def btn_transmitt_5_pressed_action(self):
-        self.serialport_sendbytes(self.text_field5.get())
+        self.serialport_sendbytes_from_String(self.text_field5.get())
 
-    def check_box_mode_pressed_action(self):
+    def btn_transmitt_hex_pressed_action(self):
+        if self.serialport.is_open and self.checkbox_hex_mode_value.get() == True:
+            self.hex_text_decode(self.text_field_for_hex.get())
+
+    def checkbox_timeline_mode_pressed_action(self):
+        self.textarea1.config(state="normal")
         self.textarea1.insert(tk.END, "\n")
+        self.textarea1.config(state="disabled")
+
+    def checkbox_hex_mode_selected_action(self):
+        self.hex_mode_object_control()
 
     def timer_callback(self):
         try:
             if self.serialport.is_open and self.serialport.in_waiting > 0:
+                self.textarea1.config(state="normal")
                 read_data = self.serialport.read_all()  # read_all return a bytes
-
                 if self.checkbox_hex_mode_value.get() == True:  # Hex mode print out
-                    if self.checkbox_mode_value.get() == True:
+                    if self.checkbox_timeline_mode_value.get() == True:
                         self.textarea1.insert(tk.END, f"{datetime.datetime.now()} > ")
                     self.textarea1.insert(
                         tk.END, self.convert2hexstring(read_data) + "\n"
                     )
-
                 else:  # character mode print out
-                    if self.checkbox_mode_value.get() == True:
+                    if self.checkbox_timeline_mode_value.get() == True:
                         self.textarea1.insert(
                             tk.END,
                             f"{datetime.datetime.now()} > {self.convert2string(read_data)}\n",
                         )
                     else:
                         self.textarea1.insert(tk.END, self.convert2string(read_data))
+                self.textarea1.config(state="disabled")
         except OSError as e:
             print(f"In timer callback catch error {e}")
         if self.checkbox_scoll2bottom_value.get() == True:
+            self.textarea1.config(state="normal")
             self.textarea1.see(tk.END)
+            self.textarea1.config(state="disabled")
 
     def timer_start(self):
         threading.Thread(target=self.timer_thread).start()
@@ -376,6 +411,70 @@ class PyTerminal:
             else:
                 return_string += f"[0x{byte:02X}]"
         return return_string
+
+    def Ascii2Hex(self, ascii_hex):
+        return_hex = -1
+        if ascii_hex >= 48 and ascii_hex <= 57:
+            return_hex = ascii_hex
+            return_hex -= 48
+        elif ascii_hex >= 65 and ascii_hex <= 70:
+            return_hex = ascii_hex
+            return_hex -= 55
+        elif ascii_hex >= 97 and ascii_hex <= 102:
+            return_hex = ascii_hex
+            return_hex -= 87
+        return return_hex
+
+    def hex_text_decode(self, hex_format_string):
+        if not isinstance(hex_format_string, str):
+            return None
+        string2bytesArray = bytes(hex_format_string, "UTF-8")  # return bytes array
+        bytes_array = []
+        header = 0
+        get_byte = 0
+        for b in string2bytesArray:
+            if header == 0:
+                if b == 48:
+                    header = 1
+                else:
+                    header = -1
+            elif header == 1:
+                if b == 120:
+                    header = 2
+                else:
+                    header = -1
+            elif header == 2:
+                get_byte = self.Ascii2Hex(b)
+                if get_byte == -1:
+                    header = -1
+                else:
+                    header = 3
+            elif header == 3:
+                header = self.Ascii2Hex(b)
+                if not (header == -1):
+                    get_byte <<= 4
+                    get_byte += header
+                    header = 4
+            elif header == 4:
+                header = 0
+                if b == 32 or b == 44:
+                    # print(f"0x{get_byte:02X}")
+                    bytes_array.append(get_byte)
+                    get_byte = 0
+                else:
+                    header = -1
+            elif header == -1:
+                print("Invalid input format. Input should be 0x__,0x__,...")
+                return None
+        if get_byte != 0:
+            bytes_array.append(get_byte)
+        # uncommnet below for debug purpose
+        # i = 0
+        # if not header == -1:
+        #     for element in bytes_array:
+        #         i += 1
+        #         print(f"{i}:{element:02X}")
+        self.serialport.write(bytes_array)
 
 
 def main():
