@@ -15,11 +15,12 @@
 
   known issue: PySerial cannot determine whether a serial port has been occupied by this or another program.
 
-  20240208: Wont upload new version recently, facing lunar year vacation in TW.
-            Will launch another repo for other pratices.
+  Timer Threading sometimes will conduct unexpeected error-> will take a look and fix soon
 
-  ![alt text](https://github.com/Maxwell-lin-TW/Python_Tkinter_Pyserial_TimerThreading/blob/main/20240208_readme_use.png)
-  ![alt text](https://github.com/Maxwell-lin-TW/Python_Tkinter_Pyserial_TimerThreading/blob/main/20240208_function_explain.png)
+  20240214: Lunar New year has passed, add hex input function and fix some bugs
+
+  ![alt text](https://github.com/Maxwell-lin-TW/Python_Tkinter_Pyserial_TimerThreading/blob/main/pyTerminal_20240214_demo.png)
+  ![alt text](https://github.com/Maxwell-lin-TW/Python_Tkinter_Pyserial_TimerThreading/blob/main/pyTerminal_20240214.png)
 
   1. select desire serial port from this combobox. If it's empty please press "Scan" first. If still empty, you should check your connections of serial port cable.
 
@@ -46,4 +47,8 @@
   12. Hex mode, if selected, the text area will only display received characters in hex code with prefix '0x'
 
   13. Trear CR as LF. if selected, when receive from serial port, it will treat carrage return as a line feed.
+
+  14. Hex input text field, please use following format, seperate each hex code with comma ',' or space ' '
+  
+      : 0x11,0x22,0x33,0x44  or 0xaa 0xbb 0xcc 0xdd
 

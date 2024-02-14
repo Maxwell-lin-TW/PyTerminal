@@ -345,6 +345,12 @@ class PyTerminal:
     def checkbox_hex_mode_selected_action(self):
         self.hex_mode_object_control()
 
+    def textarea_insert_overlay(self, insert_string):
+        if isinstance(insert_string, str):
+            self.textarea1.config(state="normal")
+            self.textarea1.insert(tk.END, insert_string)
+            self.textarea1.config(state="disabled")
+
     def timer_callback(self):
         try:
             if self.serialport.is_open and self.serialport.in_waiting > 0:
