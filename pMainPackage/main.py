@@ -492,10 +492,10 @@ def main():
         app.timer_start()
 
         def on_closing():
-            app.serialport_close()
             app.timer_stop()
+            app.serialport_close()
+            time.sleep(0.1)
             root.destroy()
-            time.sleep(1)  # wait a little while for thread to end up by stop event
 
         root.protocol("WM_DELETE_WINDOW", on_closing)
         root.mainloop()
