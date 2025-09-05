@@ -204,7 +204,8 @@ class PyTerminal:
 
     def update_combobox_value(self):
         self.combobox1_serialports.config(values=self.portlist_name)
-        self.combobox1_serialports.current(0)
+        if len(self.portlist_name) != 0:
+            self.combobox1_serialports.current(0)
 
     def remove_combobox_value(self):
         self.combobox1_serialports["values"] = []
@@ -238,7 +239,7 @@ class PyTerminal:
         if self.serialport.is_open:
             self.serialport.close()
 
-    def make_string(self, combobox_text, target_string):
+    def make_string(self, combobox_text, target_string) -> str:
         if combobox_text == "+ LF":
             return target_string + "\n"
         elif combobox_text == "+ CR":
@@ -250,7 +251,7 @@ class PyTerminal:
         elif combobox_text == "+LF * +CR":
             return "\n" + target_string + "\r"
         else:
-            return None
+            return ""
 
     def serialport_sendbytes_from_String(self, data):
         if not isinstance(data, str):
@@ -389,21 +390,21 @@ class PyTerminal:
             self.timer_callback()
             self.timer_stop_event.wait(self.timer_interval)
 
-    def convert2hexstring(self, input):
-        if not isinstance(input, bytes):
-            return None
-        byte_arrary = [int(byte) for byte in input]
+    def convert2hexstring(self, input) -> str:
         return_string = ""
+        if not isinstance(input, bytes):
+            return return_string
+        byte_arrary = [int(byte) for byte in input]
         for byte in byte_arrary:
             return_string += f"0x{byte:02X},"
         return_string = return_string.rstrip(",")
         return return_string
 
     def convert2string(self, input):
-        if not isinstance(input, bytes):
-            return None
-        byte_arrary = [int(byte) for byte in input]
         return_string = ""
+        if not isinstance(input, bytes):
+            return return_string
+        byte_arrary = [int(byte) for byte in input]
         for byte in byte_arrary:
             if byte >= 32 and byte <= 126:
                 return_string += f"{chr(byte)}"
@@ -435,7 +436,7 @@ class PyTerminal:
         if not isinstance(hex_format_string, str):
             return None
         string2bytesArray = bytes(hex_format_string, "UTF-8")  # return bytes array
-        bytes_array = []
+        bytes_array: list[int] = []
         header = 0
         get_byte = 0
         for b in string2bytesArray:
@@ -480,7 +481,7 @@ class PyTerminal:
         #     for element in bytes_array:
         #         i += 1
         #         print(f"{i}:{element:02X}")
-        self.serialport.write(bytes_array)
+        self.serialport.write(bytes(bytes_array))
 
 
 def main():
